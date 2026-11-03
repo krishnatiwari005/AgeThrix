@@ -1,0 +1,1 @@
+export function ModelInfo() { return <section className="workspace-card compact-card"><span className="eyebrow">AGETHRIX CLOUD · MODEL</span><strong>Configured through your provider key</strong><p className="muted">Model details will appear after the build completes.</p></section>; }

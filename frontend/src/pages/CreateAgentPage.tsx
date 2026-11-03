@@ -1,0 +1,12 @@
+import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
+import { agentsApi } from "../services/api";
+
+export function CreateAgentPage() {
+  const navigate = useNavigate();
+  const [name, setName] = useState(""); const [description, setDescription] = useState(""); const [prompt, setPrompt] = useState(""); const [accessMode, setAccessMode] = useState<"private" | "public">("private"); const [error, setError] = useState("");
+  const create = useMutation({ mutationFn: async () => { const agent = (await agentsApi.create({ name, description, access_mode: accessMode })).data; await agentsApi.build(agent.id, prompt); return agent; }, onSuccess: (agent) => navigate(`/agents/${agent.id}/build`), onError: () => setError("We couldn’t start the build. Check your details and try again.") });
+  return <main className="page narrow-page"><Link className="back-link" to="/dashboard">← Back to Agethrix Hub</Link><div className="form-header"><span className="eyebrow">AGETHRIX STUDIO · NEW AGENT</span><h1>What should your agent do?</h1><p className="muted">Give it a clear purpose. Agethrix will turn your intent into a personalized workspace.</p></div><form className="panel form-panel" onSubmit={(event) => { event.preventDefault(); create.mutate(); }}><label>Agent name<input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Research partner" required maxLength={120} /></label><label>Short description<textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder="A quick description for your dashboard" rows={3} /></label><label>Your agent prompt<textarea className="prompt-input" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="I want an agent that helps me…" required minLength={10} rows={9} /></label><label>Access mode<select value={accessMode} onChange={(event) => setAccessMode(event.target.value as "private" | "public")}><option value="private">Private — only me</option><option value="public">Public — shareable link</option></select></label>{error && <p className="form-error">{error}</p>}<div className="form-actions"><Link className="button button-secondary" to="/dashboard">Cancel</Link><button className="button button-primary" disabled={create.isPending}>{create.isPending ? "Starting build…" : "Build agent"}</button></div></form></main>;
+}

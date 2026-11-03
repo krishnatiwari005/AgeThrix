@@ -1,0 +1,1 @@
+export function DocumentList() { return <section className="workspace-card"><div className="card-heading"><div><span className="eyebrow">AGETHRIX CLOUD · KNOWLEDGE</span><h2>Documents</h2></div><span className="status">not enabled</span></div><p className="muted">Document upload and retrieval will appear here when the backend ingestion phase is enabled.</p></section>; }
