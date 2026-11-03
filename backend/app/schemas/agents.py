@@ -24,5 +24,6 @@ class AgentResponse(BaseModel):
     slug: str
     status: str
     access_mode: str
+    model_name: str | None = None
     created_at: datetime
     updated_at: datetime

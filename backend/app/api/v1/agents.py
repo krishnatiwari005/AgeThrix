@@ -10,6 +10,7 @@ from app.services.auth import decode_access_token
 from app.core.config import settings
 from app.database.session import get_db
 from app.models.agents import Agent
+from app.models.builds import AgentConfiguration
 from app.models.auth import User
 from app.schemas.agents import AgentCreate, AgentResponse, AgentUpdate
 from app.services.slugs import generate_slug
@@ -17,8 +18,20 @@ from app.services.slugs import generate_slug
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
 
 
-def agent_response(agent: Agent) -> AgentResponse:
-    return AgentResponse.model_validate(agent, from_attributes=True)
+def agent_response(agent: Agent, db: Session) -> AgentResponse:
+    response = AgentResponse.model_validate(agent, from_attributes=True)
+    configuration = db.scalar(
+        select(AgentConfiguration).where(
+            AgentConfiguration.agent_id == agent.id,
+            AgentConfiguration.is_current.is_(True),
+        )
+    )
+    preferences = configuration.spec.get("model_preferences", {}) if configuration else {}
+    preferred_models = preferences.get("preferred_models", []) if isinstance(preferences, dict) else []
+    response.model_name = str(preferred_models[0]) if preferred_models else (
+        "openai/gpt-oss-20b" if configuration else None
+    )
+    return response
 
 
 def get_owned_agent(agent_id: UUID, user: User, db: Session) -> Agent:
@@ -57,7 +70,7 @@ def create_agent(
     db.add(agent)
     db.commit()
     db.refresh(agent)
-    return agent_response(agent)
+    return agent_response(agent, db)
 
 
 @router.get("", response_model=list[AgentResponse])
@@ -67,14 +80,14 @@ def list_agents(
     agents = db.scalars(
         select(Agent).where(Agent.owner_id == user.id).order_by(Agent.created_at.desc())
     ).all()
-    return [agent_response(agent) for agent in agents]
+    return [agent_response(agent, db) for agent in agents]
 
 
 @router.get("/{agent_id}", response_model=AgentResponse)
 def get_agent(
     agent_id: UUID, user: User = Depends(current_user), db: Session = Depends(get_db)
 ) -> AgentResponse:
-    return agent_response(get_owned_agent(agent_id, user, db))
+    return agent_response(get_owned_agent(agent_id, user, db), db)
 
 
 @router.get("/by-slug/{slug}", response_model=AgentResponse)
@@ -95,7 +108,7 @@ def get_agent_by_slug(
             raise HTTPException(status_code=401, detail="Authentication required") from None
         if agent.owner_id != owner_id:
             raise HTTPException(status_code=404, detail="Agent not found")
-    return agent_response(agent)
+    return agent_response(agent, db)
 
 
 @router.patch("/{agent_id}", response_model=AgentResponse)
@@ -114,7 +127,7 @@ def update_agent(
         agent.access_mode = payload.access_mode
     db.commit()
     db.refresh(agent)
-    return agent_response(agent)
+    return agent_response(agent, db)
 
 
 @router.delete("/{agent_id}", status_code=status.HTTP_204_NO_CONTENT)

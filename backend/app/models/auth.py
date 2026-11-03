@@ -28,6 +28,7 @@ class User(TimestampMixin, Base):
     __table_args__ = (Index("ix_users_email_lower", text("lower(email)"), unique=True),)
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    name: Mapped[str] = mapped_column(String(120), nullable=False, default="")
     email: Mapped[str] = mapped_column(String(320), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

@@ -90,7 +90,7 @@ def register(payload: RegisterRequest, response: Response, db: Session = Depends
     email = normalize_email(str(payload.email))
     if db.scalar(select(User).where(User.email == email)) is not None:
         raise HTTPException(status_code=409, detail="Unable to create account")
-    user = User(email=email, password_hash=hash_password(payload.password))
+    user = User(name=payload.name.strip() or "there", email=email, password_hash=hash_password(payload.password))
     db.add(user)
     db.flush()
     issue_refresh = issue_refresh_token(db, user)
