@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export type User = { id: string; email: string; email_verified: boolean };
+export type User = { id: string; name: string; email: string; email_verified: boolean };
 export type TokenResponse = { access_token: string; token_type: string };
 export type Agent = {
   id: string;
@@ -9,6 +9,7 @@ export type Agent = {
   slug: string;
   status: string;
   access_mode: string;
+  model_name: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -83,8 +84,8 @@ async function refreshAccessToken() {
 }
 
 export const authApi = {
-  register: (email: string, password: string) =>
-    api.post<TokenResponse>("/auth/register", { email, password }),
+  register: (name: string, email: string, password: string) =>
+    api.post<TokenResponse>("/auth/register", { name, email, password }),
   login: (email: string, password: string) =>
     api.post<TokenResponse>("/auth/login", { email, password }),
   me: () => api.get<User>("/auth/me"),

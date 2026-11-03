@@ -7,7 +7,7 @@ type AuthContextValue = {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -29,8 +29,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAccessToken(data.access_token);
       setUser((await authApi.me()).data);
     },
-    register: async (email, password) => {
-      const { data } = await authApi.register(email, password);
+    register: async (name, email, password) => {
+      const { data } = await authApi.register(name, email, password);
       setAccessToken(data.access_token);
       setUser((await authApi.me()).data);
     },
